@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Example provisioning API usage script.  (C) DataStax, 2015.  All Rights Reserved
 #
-# Needs these OS environmental variables pre-defined: lcm_server, opscenter_session (optional), dse_ver (optional), cluster_name (optional)
+# Needs these OS environmental variables pre-defined: lcm_server, cassandra_default_password, opscenter_session (optional), dse_ver (optional), cluster_name (optional)
 # command line parameter with node IP/DC in the following format:
 # private_IP:public:IP:DC_name:node_number
 #
@@ -21,13 +21,16 @@ if "lcm_server" not in os.environ:
 server_ip = os.environ.get('lcm_server').strip()
 base_url = 'http://%s:8888/api/v2/lcm/' % server_ip
 
+if "cassandra_default_password" not in os.environ:
+    print "Cannot find cassandra_default_password in env"
+    exit(1)
+cassandra_default_password = os.environ.get('cassandra_default_password').strip()
+
 opscenter_session = os.environ.get('opscenter_session', '')
 
 dse_ver = os.environ.get('dse_ver', '6.0.0').strip()
 
 cluster_name = os.environ.get('cluster_name', 'dse-cluster').strip()
-
-cassandra_default_password = os.environ.get('cassandra_default_password', 'datastax').strip()
 
 print str(sys.argv)
 
