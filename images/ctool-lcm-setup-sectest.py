@@ -21,6 +21,17 @@ if "lcm_server" not in os.environ:
 server_ip = os.environ.get('lcm_server').strip()
 base_url = 'http://%s:8888/api/v2/lcm/' % server_ip
 
+# Add some logic to decide if internal repo can be used, if the nodes are not on Santa Clara lab, internal repo cannot be used, and qa credential may be required to access public repo for pre-GA versions.
+public_repo = False
+if not server_ip.startswith("10.200"):
+    public_repo = True
+    # not on Santa Clara VPN, requires repo_user and repo_pass to be set
+    if "dsrepo_user" not in os.environ or "dsrepo_pass" not in os.environ:
+        print "Cannot find dsrepo_user and dsrepo_pass in env"
+        exit(1)
+    repo_user = os.environ.get('dsrepo_user').strip()
+    repo_pass = os.environ.get('dsrepo_pass').strip()
+
 if "cassandra_default_password" not in os.environ:
     print "Cannot find cassandra_default_password in env"
     exit(1)
@@ -42,10 +53,18 @@ def do_post(url, post_data):
     result_data = json.loads(result.text)
     return result_data
 
-repository_response = do_post("repositories/",
-    {"name": "dse-qa-repo",
-        "repo-url": "http://qa.datastax.lan/deb/enterprise",
-        "repo-key-url": "http://qa.datastax.lan/deb/debian/repo_key"})
+if public_repo:
+    repository_response = do_post("repositories/",
+        {"name": "dse-public-qa-repo",
+            "username": repo_user,
+            "password": repo_pass,
+            "repo-url": "http://debian-qa.datastax.com/enterprise/",
+            "repo-key-url": "https://debian.datastax.com/debian/repo_key"})
+else:
+    repository_response = do_post("repositories/",
+        {"name": "dse-internal-qa-repo",
+            "repo-url": "http://qa.datastax.lan/deb/enterprise",
+            "repo-key-url": "http://qa.datastax.lan/deb/debian/repo_key"})
 repository_id = repository_response['id']
 
 # ssh private key example
@@ -108,16 +127,15 @@ for host in sys.argv[1:]:
          "ssh-management-address": node_ip,
          "datacenter-id": data_center_ids[data_center],
          "rack": "rack1"})
-##
-### Request an install job to execute the installation and configuration of the
-### cluster. Until this point, we've been describing future state. Now LCM will
-### execute the changes necessary to achieve that state.
-##install_job = do_post("actions/install",
-##                     {"job-type":"install",
-##                      "job-scope":"cluster",
-##                      "resource-id":cluster_id,
-##                      "continue-on-error":"false",
-##                      "change-default-cassandra-password":"datastax"})
+
+# Request an install job to execute the installation and configuration of the
+# cluster. Until this point, we've been describing future state. Now LCM will
+# execute the changes necessary to achieve that state.
+install_job = do_post("actions/install",
+                     {"job-type":"install",
+                      "job-scope":"cluster",
+                      "resource-id":cluster_id,
+                      "continue-on-error":"false"})
 
 print("http://%s:8888" % server_ip)
 
