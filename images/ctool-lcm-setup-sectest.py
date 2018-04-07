@@ -121,9 +121,9 @@ for host in sys.argv[1:]:
     make_node_response = do_post("nodes/",
         {"name": "node" + str(node_idx) + "_" + node_ip,
          "listen-address": private_ip,
-         "rpc-address": "0.0.0.0",
+         "native-transport-address": "0.0.0.0",
 	 "broadcast-address": node_ip,
-         "broadcast-rpc-address": node_ip,
+         "native-transport-broadcast-address": node_ip,
          "ssh-management-address": node_ip,
          "datacenter-id": data_center_ids[data_center],
          "rack": "rack1"})
