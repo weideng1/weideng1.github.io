@@ -3,7 +3,7 @@
 #
 # Needs these OS environmental variables pre-defined: lcm_server, cassandra_default_password, opscenter_session (optional), dse_ver (optional), cluster_name (optional)
 # command line parameter with node IP/DC in the following format:
-# private_IP:public:IP:DC_name:node_number
+# public_IP:private_IP:DC_name:node_number
 #
 # An example command line to generate from ctool output is like the following:
 # ctool info --private-ips <ctool_cluster_name> | tr " " "\n" | awk '{print $1 ":" $1 ":dc1:" NR-1}'
@@ -55,10 +55,10 @@ def do_post(url, post_data):
 
 if public_repo:
     repository_response = do_post("repositories/",
-        {"name": "dse-public-qa-repo",
+        {"name": "dse-public-repo",
             "username": repo_user,
             "password": repo_pass,
-            "repo-url": "http://debian-qa.datastax.com/enterprise/",
+            "repo-url": "http://debian.datastax.com/enterprise/",
             "repo-key-url": "https://debian.datastax.com/debian/repo_key"})
 else:
     repository_response = do_post("repositories/",
@@ -106,7 +106,6 @@ for data_center in data_centers:
     make_dc_response = do_post("datacenters/",
         {"name": data_center,
          "cluster-id": cluster_id,
-         "config-profile-id": cluster_profile_id,
          "solr-enabled": True,
          "spark-enabled": True,
          "graph-enabled": True})
@@ -138,4 +137,5 @@ install_job = do_post("actions/install",
                       "continue-on-error":"false"})
 
 print("http://%s:8888" % server_ip)
+
 
