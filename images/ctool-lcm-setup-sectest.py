@@ -74,6 +74,7 @@ machine_credential_response = do_post("machine_credentials/",
      {"name": "ctool-key",
       "login-user": "automaton",
       "become-mode": "sudo",
+      "use-ssh-keys": True,
       "ssh-private-key": privateKey
     }
 )
