@@ -21,16 +21,11 @@ if "lcm_server" not in os.environ:
 server_ip = os.environ.get('lcm_server').strip()
 base_url = 'http://%s:8888/api/v2/lcm/' % server_ip
 
-# Add some logic to decide if internal repo can be used, if the nodes are not on Santa Clara lab, internal repo cannot be used, and qa credential may be required to access public repo for pre-GA versions.
-public_repo = False
-if not server_ip.startswith("10.200"):
-    public_repo = True
-    # not on Santa Clara VPN, requires repo_user and repo_pass to be set
-    if "dsrepo_user" not in os.environ or "dsrepo_pass" not in os.environ:
-        print "Cannot find dsrepo_user and dsrepo_pass in env"
-        exit(1)
-    repo_user = os.environ.get('dsrepo_user').strip()
-    repo_pass = os.environ.get('dsrepo_pass').strip()
+if "dsrepo_user" not in os.environ or "dsrepo_pass" not in os.environ:
+    print "Cannot find dsrepo_user and dsrepo_pass in env"
+    exit(1)
+repo_user = os.environ.get('dsrepo_user').strip()
+repo_pass = os.environ.get('dsrepo_pass').strip()
 
 if "cassandra_default_password" not in os.environ:
     print "Cannot find cassandra_default_password in env"
@@ -53,18 +48,11 @@ def do_post(url, post_data):
     result_data = json.loads(result.text)
     return result_data
 
-if public_repo:
-    repository_response = do_post("repositories/",
-        {"name": "dse-public-repo",
-            "username": repo_user,
-            "password": repo_pass,
-            "repo-url": "http://debian.datastax.com/enterprise/",
-            "repo-key-url": "https://debian.datastax.com/debian/repo_key"})
-else:
-    repository_response = do_post("repositories/",
-        {"name": "dse-internal-qa-repo",
-            "repo-url": "http://qa.datastax.lan/deb/enterprise",
-            "repo-key-url": "http://qa.datastax.lan/deb/debian/repo_key"})
+repository_response = do_post("repositories/",
+    {"name": "dse-public-repo",
+        "username": repo_user,
+        "password": repo_pass})
+
 repository_id = repository_response['id']
 
 # ssh private key example
